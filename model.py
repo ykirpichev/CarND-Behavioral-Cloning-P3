@@ -2,22 +2,26 @@ import csv
 import cv2
 import os
 import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.utils import shuffle
 
 samples = []
-batch_size = 32
+batch_size = 64
 
+corrections = [0, .2, -0.2]
 with open('data/driving_log.csv') as csvfile:
     reader = csv.reader(csvfile)
     for line in reader:
-        samples.append(line)
+        for index in range(3):
+            samples.append([line[index], float(line[3]) + corrections[index]])
 
-from sklearn.model_selection import train_test_split
-from sklearn.utils import shuffle
 train_samples, validation_samples = train_test_split(samples, test_size=0.2)
 
 make_path = lambda x: os.path.join('data/IMG', x.split('/')[-1])
+read_image = lambda x: cv2.cvtColor(cv2.imread(make_path(x)), cv2.COLOR_BGR2RGB)
 
-def generator(samples, batch_size=32):
+
+def generator(samples, batch_size):
     num_samples = len(samples)
     while 1:
         shuffle(samples)
@@ -27,32 +31,14 @@ def generator(samples, batch_size=32):
             images = []
             angles = []
             for batch_sample in batch_samples:
-                name = make_path(batch_sample[0])
-                center_image = cv2.imread(name)
-                center_angle = float(batch_sample[3])
+                image = read_image(batch_sample[0])
+                angle = batch_sample[1]
 
-                # create adjusted steering measurements for the side camera images
-                correction = .2 # this is a parameter to tune
-                left_angle = center_angle + correction
-                right_angle = center_angle - correction
+                images.append(image)
+                angles.append(angle)
 
-                left_image = cv2.imread(make_path(batch_sample[1]))
-                right_image = cv2.imread(make_path(batch_sample[2]))
-
-                # add images and angles to data set
-                images.append(center_image)
-                images.append(left_image)
-                images.append(right_image)
-                angles.append(center_angle)
-                angles.append(left_angle)
-                angles.append(right_angle)
-
-                images.append(cv2.flip(center_image, 0))
-                images.append(cv2.flip(left_image, 0))
-                images.append(cv2.flip(right_image, 0))
-                angles.append(-center_angle)
-                angles.append(-left_angle)
-                angles.append(-right_angle)
+                images.append(cv2.flip(image, 1))
+                angles.append(-angle)
 
             X_train = np.array(images)
             y_train = np.array(angles)
@@ -71,25 +57,12 @@ from keras.layers import Conv2D, Cropping2D, MaxPooling2D
 model = Sequential()
 model.add(Cropping2D(cropping=((50, 20), (0, 0)), input_shape=(160, 320, 3)))
 model.add(Lambda(lambda x: x / 255.0 - 0.5))
-
-model.add(Conv2D(8, (3, 3), padding='same', activation='relu'))
-model.add(MaxPooling2D())
-
-model.add(Conv2D(24, (3, 3), padding='same', activation='relu'))
-model.add(MaxPooling2D())
-
-model.add(Conv2D(36, (3, 3), padding='same', activation='relu'))
-model.add(MaxPooling2D())
-
+model.add(Conv2D(3, (5, 5), strides=1, padding='same', activation='relu'))
+model.add(Conv2D(24, (5, 5), strides=2, padding='same', activation='relu'))
+model.add(Conv2D(36, (5, 5), strides=2, padding='same', activation='relu'))
 model.add(Conv2D(48, (3, 3), padding='same', activation='relu'))
-model.add(MaxPooling2D())
-
-model.add(Conv2D(64, (3, 3), padding='same', activation='relu'))
-model.add(MaxPooling2D())
-
-model.add(Conv2D(64, (3, 3), padding='same', activation='relu'))
-model.add(Dropout(0.5))
-
+model.add(Conv2D(64, (3, 3), activation='relu'))
+model.add(Conv2D(64, (3, 3), activation='relu'))
 model.add(Flatten())
 model.add(Dense(100))
 model.add(Dense(50))
@@ -98,13 +71,12 @@ model.add(Dense(1))
 
 
 model.compile(loss='mse', optimizer='adam')
-#history_object = model.fit(X_train, Y_train, validation_split=0.2, shuffle=True, epochs=2, verbose=1)
 history_object = model.fit_generator(train_generator,
-        steps_per_epoch=len(train_samples)/batch_size,
-        validation_data=validation_generator,
-        validation_steps=len(validation_samples)/batch_size, 
-        epochs=1,
-        verbose=1)
+        steps_per_epoch = len(train_samples) / batch_size,
+        validation_data = validation_generator,
+        validation_steps = len(validation_samples) / batch_size,
+        epochs = 5,
+        verbose = 1)
 
 model.save('model.h5')
 

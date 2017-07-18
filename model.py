@@ -7,15 +7,44 @@ import click
 batch_size = 64
 
 def load_and_augment_data():
-    samples = []
-    corrections = [0, .2, -0.2]
+    import numpy as np
+
+    image_paths = []
+    angles = []
+    corrections = [0, 0.2, -0.2]
     with open('data/driving_log.csv') as csvfile:
         reader = csv.reader(csvfile)
         for line in reader:
             for index in range(3):
-                samples.append([line[index], float(line[3]) + corrections[index]])
+                image_paths.append(line[index])
+                angles.append(float(line[3]) + corrections[index])
 
-    return samples
+    num_bins = 25
+    avg_samples_per_bin = len(angles) / num_bins
+    hist, bins = np.histogram(angles, num_bins)
+
+    keep_probs = []
+    target = avg_samples_per_bin * 0.5
+
+    for i in range(num_bins):
+        if hist[i] < target:
+            keep_probs.append(1.)
+        else:
+            keep_probs.append(1./(hist[i]/target))
+
+    remove_list = []
+    for i in range(len(angles)):
+        for j in range(num_bins):
+            if angles[i] > bins[j] and angles[i] <= bins[j+1]:
+                # delete from X and y with probability 1 - keep_probs[j]
+                if np.random.rand() > keep_probs[j]:
+                    remove_list.append(i)
+    image_paths = np.delete(image_paths, remove_list, axis=0)
+    angles = np.delete(angles, remove_list, axis=0)
+    res = []
+    for x, y in zip(image_paths, angles):
+        res.append((x,y))
+    return res
 
 samples = load_and_augment_data()
 make_path = lambda x: os.path.join('data/IMG', x.split('/')[-1])
@@ -108,10 +137,33 @@ def train_model():
 
     model.save('model.h5')
 
+    print(history_object.history.keys())
+    print('Loss')
+    print(history_object.history['loss'])
+    print('Validation Loss')
+    print(history_object.history['val_loss'])
+
 
 @cli.command()
 def draw_model():
     model = make_model()
+    from keras.utils import plot_model
+    plot_model(model, to_file='model.png')
+
+
+@cli.command()
+def draw_random_images():
+    import matplotlib.pyplot as plt
+
+    for i in range(3):
+        image = read_image(samples[i][0])
+        angle = samples[i][1]
+        print(angle)
+        plt.figure(i)
+        plt.imshow(image)
+    plt.show()
+    plt.waitforbuttonpress()
+
 
 #print(history_object.history.keys())
 #

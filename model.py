@@ -116,6 +116,30 @@ def make_model():
     model.compile(loss='mse', optimizer='adam')
     return model
 
+def make_small_model():
+    from keras.models import Sequential
+    from keras.layers import Flatten, Dense, Lambda, Dropout
+    from keras.layers import Conv2D, Cropping2D, MaxPooling2D
+    
+    
+    model = Sequential()
+    model.add(Cropping2D(cropping=((50, 20), (0, 0)), input_shape=(160, 320, 3)))
+    model.add(Lambda(lambda x: x / 255.0 - 0.5))
+    model.add(Conv2D(3, (5, 5), strides=1, padding='same', activation='relu'))
+    model.add(Conv2D(24, (5, 5), strides=2, padding='same', activation='relu'))
+    model.add(Conv2D(36, (5, 5), strides=2, padding='same', activation='relu'))
+    model.add(Conv2D(48, (3, 3), strides=2, padding='same', activation='relu'))
+    model.add(Conv2D(64, (3, 3), strides=2, padding='same', activation='relu'))
+    model.add(Conv2D(128, (3, 3), strides=2, padding='same', activation='relu'))
+    model.add(Flatten())
+    model.add(Dense(100))
+    model.add(Dense(50))
+    model.add(Dense(10))
+    model.add(Dense(1))
+
+    model.compile(loss='mse', optimizer='adam')
+    return model
+
 @cli.command()
 def train_model():
     from sklearn.model_selection import train_test_split
@@ -143,12 +167,38 @@ def train_model():
     print('Validation Loss')
     print(history_object.history['val_loss'])
 
+@cli.command()
+def train_small_model():
+    from sklearn.model_selection import train_test_split
+
+    train_samples, validation_samples = train_test_split(samples, test_size=0.2)
+
+    # compile and train the model using the generator function
+    train_generator = generator(train_samples, batch_size=batch_size)
+    validation_generator = generator(validation_samples, batch_size=batch_size)
+
+    model = make_small_model()
+
+    history_object = model.fit_generator(train_generator,
+            steps_per_epoch = len(train_samples) / batch_size,
+            validation_data = validation_generator,
+            validation_steps = len(validation_samples) / batch_size,
+            epochs = 5,
+            verbose = 1)
+
+    model.save('model_small.h5')
+
+    print(history_object.history.keys())
+    print('Loss')
+    print(history_object.history['loss'])
+    print('Validation Loss')
+    print(history_object.history['val_loss'])
 
 @cli.command()
 def draw_model():
     model = make_model()
     from keras.utils import plot_model
-    plot_model(model, to_file='model.png')
+    plot_model(model, to_file='model.png', show_shapes=True)
 
 
 @cli.command()

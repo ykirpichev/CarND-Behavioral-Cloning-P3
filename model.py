@@ -11,36 +11,43 @@ def load_and_augment_data():
 
     image_paths = []
     angles = []
-    corrections = [0, 0.2, -0.2]
+    corrections = [0, 0.15, -0.15]
     with open('data/driving_log.csv') as csvfile:
         reader = csv.reader(csvfile)
         for line in reader:
             for index in range(3):
                 image_paths.append(line[index])
                 angles.append(float(line[3]) + corrections[index])
+              
 
     num_bins = 25
+    print(len(angles))
     avg_samples_per_bin = len(angles) / num_bins
     hist, bins = np.histogram(angles, num_bins)
 
     keep_probs = []
-    target = avg_samples_per_bin * 0.5
+    target = avg_samples_per_bin# * 0.5
 
     for i in range(num_bins):
         if hist[i] < target:
             keep_probs.append(1.)
         else:
-            keep_probs.append(1./(hist[i]/target))
+            print(i, hist[i], bins[i], 1./(float(hist[i])/target))
+
+            if abs(bins[i]) < 0.1:
+                keep_probs.append(1.5/(float(hist[i])/target))
+            else:
+                keep_probs.append(1./(float(hist[i])/target))
 
     remove_list = []
     for i in range(len(angles)):
         for j in range(num_bins):
-            if angles[i] > bins[j] and angles[i] <= bins[j+1]:
+            if angles[i] >= bins[j] and angles[i] < bins[j+1]:
                 # delete from X and y with probability 1 - keep_probs[j]
                 if np.random.rand() > keep_probs[j]:
                     remove_list.append(i)
     image_paths = np.delete(image_paths, remove_list, axis=0)
-    angles = np.delete(angles, remove_list, axis=0)
+    angles = np.delete(angles, remove_list)
     res = []
     for x, y in zip(image_paths, angles):
         res.append((x,y))
@@ -121,16 +128,16 @@ def make_small_model():
     from keras.layers import Flatten, Dense, Lambda, Dropout
     from keras.layers import Conv2D, Cropping2D, MaxPooling2D
     
-    
     model = Sequential()
     model.add(Cropping2D(cropping=((50, 20), (0, 0)), input_shape=(160, 320, 3)))
     model.add(Lambda(lambda x: x / 255.0 - 0.5))
     model.add(Conv2D(3, (5, 5), strides=1, padding='same', activation='relu'))
-    model.add(Conv2D(24, (5, 5), strides=2, padding='same', activation='relu'))
-    model.add(Conv2D(36, (5, 5), strides=2, padding='same', activation='relu'))
-    model.add(Conv2D(48, (3, 3), strides=2, padding='same', activation='relu'))
-    model.add(Conv2D(64, (3, 3), strides=2, padding='same', activation='relu'))
-    model.add(Conv2D(128, (3, 3), strides=2, padding='same', activation='relu'))
+    model.add(Conv2D(8, (3, 3), strides=2, padding='same', activation='relu'))
+    model.add(Conv2D(16, (3, 3), strides=2, padding='same', activation='relu'))
+    model.add(Conv2D(24, (3, 3), strides=2, padding='same', activation='relu'))
+    model.add(Conv2D(32, (3, 3), strides=2, padding='same', activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
     model.add(Flatten())
     model.add(Dense(100))
     model.add(Dense(50))
@@ -183,7 +190,7 @@ def train_small_model():
             steps_per_epoch = len(train_samples) / batch_size,
             validation_data = validation_generator,
             validation_steps = len(validation_samples) / batch_size,
-            epochs = 5,
+            epochs = 3,
             verbose = 1)
 
     model.save('model_small.h5')

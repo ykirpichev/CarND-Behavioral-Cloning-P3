@@ -11,8 +11,8 @@ def load_and_augment_data():
 
     image_paths = []
     angles = []
-    corrections = [0, 0.15, -0.15]
-    with open('data/driving_log.csv') as csvfile:
+    corrections = [0, 0.2, -0.2]
+    with open('data3/driving_log.csv') as csvfile:
         reader = csv.reader(csvfile)
         for line in reader:
             for index in range(3):
@@ -26,18 +26,13 @@ def load_and_augment_data():
     hist, bins = np.histogram(angles, num_bins)
 
     keep_probs = []
-    target = avg_samples_per_bin# * 0.5
+    target = avg_samples_per_bin * 0.5
 
     for i in range(num_bins):
         if hist[i] < target:
             keep_probs.append(1.)
         else:
-            print(i, hist[i], bins[i], 1./(float(hist[i])/target))
-
-            if abs(bins[i]) < 0.1:
-                keep_probs.append(1.5/(float(hist[i])/target))
-            else:
-                keep_probs.append(1./(float(hist[i])/target))
+            keep_probs.append(1./(float(hist[i])/target))
 
     remove_list = []
     for i in range(len(angles)):
@@ -54,7 +49,7 @@ def load_and_augment_data():
     return res
 
 samples = load_and_augment_data()
-make_path = lambda x: os.path.join('data/IMG', x.split('/')[-1])
+make_path = lambda x: os.path.join('data3/IMG', x.split('/')[-1])
 read_image = lambda x: cv2.cvtColor(cv2.imread(make_path(x)), cv2.COLOR_BGR2RGB)
 
 @click.group()
@@ -108,10 +103,9 @@ def make_model():
     model = Sequential()
     model.add(Cropping2D(cropping=((50, 20), (0, 0)), input_shape=(160, 320, 3)))
     model.add(Lambda(lambda x: x / 255.0 - 0.5))
-    model.add(Conv2D(3, (5, 5), strides=1, padding='same', activation='relu'))
     model.add(Conv2D(24, (5, 5), strides=2, padding='same', activation='relu'))
     model.add(Conv2D(36, (5, 5), strides=2, padding='same', activation='relu'))
-    model.add(Conv2D(48, (3, 3), padding='same', activation='relu'))
+    model.add(Conv2D(48, (5, 5), strides=2, padding='same', activation='relu'))
     model.add(Conv2D(64, (3, 3), activation='relu'))
     model.add(Conv2D(64, (3, 3), activation='relu'))
     model.add(Flatten())
@@ -131,7 +125,6 @@ def make_small_model():
     model = Sequential()
     model.add(Cropping2D(cropping=((50, 20), (0, 0)), input_shape=(160, 320, 3)))
     model.add(Lambda(lambda x: x / 255.0 - 0.5))
-    model.add(Conv2D(3, (5, 5), strides=1, padding='same', activation='relu'))
     model.add(Conv2D(8, (3, 3), strides=2, padding='same', activation='relu'))
     model.add(Conv2D(16, (3, 3), strides=2, padding='same', activation='relu'))
     model.add(Conv2D(24, (3, 3), strides=2, padding='same', activation='relu'))
@@ -166,7 +159,7 @@ def train_model():
             epochs = 5,
             verbose = 1)
 
-    model.save('model.h5')
+    model.save('model_large.h5')
 
     print(history_object.history.keys())
     print('Loss')

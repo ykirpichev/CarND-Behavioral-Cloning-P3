@@ -26,13 +26,17 @@ def load_and_augment_data():
     hist, bins = np.histogram(angles, num_bins)
 
     keep_probs = []
-    target = avg_samples_per_bin * 0.5
+    target = avg_samples_per_bin
 
     for i in range(num_bins):
         if hist[i] < target:
             keep_probs.append(1.)
         else:
-            keep_probs.append(1./(float(hist[i])/target))
+            print(bins[i])
+            if abs(bins[i]) < 0.1:
+                keep_probs.append(1.2/(float(hist[i])/target))
+            else:
+                keep_probs.append(1./(float(hist[i])/target))
 
     remove_list = []
     for i in range(len(angles)):
@@ -156,7 +160,7 @@ def train_model():
             steps_per_epoch = len(train_samples) / batch_size,
             validation_data = validation_generator,
             validation_steps = len(validation_samples) / batch_size,
-            epochs = 5,
+            epochs = 4,
             verbose = 1)
 
     model.save('model_large.h5')

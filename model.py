@@ -199,10 +199,12 @@ def train_small_model():
     print(history_object.history['val_loss'])
 
 @cli.command()
-def draw_model():
+def draw_models():
     model = make_model()
     from keras.utils import plot_model
     plot_model(model, to_file='model.png', show_shapes=True)
+    plot_model(make_small_model(), to_file='model_small.png', show_shapes=True)
+
 
 
 @cli.command()

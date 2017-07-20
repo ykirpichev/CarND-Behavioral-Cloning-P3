@@ -6,12 +6,15 @@ import click
 
 batch_size = 64
 
+# used in order to load and augment data
 def load_and_augment_data():
     import numpy as np
 
     image_paths = []
     angles = []
-    corrections = [0, 0.2, -0.2]
+    # as lectures suggest, using 0.25 for left image and -0.25 for right
+    # tried different values (0.1, 0.15, 0.2, 0.25, 0.3) and 0.25 showed the best result
+    corrections = [0, 0.25, -0.25]
     with open('data3/driving_log.csv') as csvfile:
         reader = csv.reader(csvfile)
         for line in reader:
@@ -20,6 +23,7 @@ def load_and_augment_data():
                 angles.append(float(line[3]) + corrections[index])
               
 
+    # drop some images because otherwise model tends to prefer driving in forward direction 
     num_bins = 25
     print(len(angles))
     avg_samples_per_bin = len(angles) / num_bins
@@ -33,6 +37,9 @@ def load_and_augment_data():
             keep_probs.append(1.)
         else:
             print(bins[i])
+            # use slightly more data for forward direction in order to learn model
+            # stabilize car when car starts wriggle
+            # of course there are other aproaches to do that, but this seems to be the simplest and worked for my data
             if abs(bins[i]) < 0.1:
                 keep_probs.append(1.2/(float(hist[i])/target))
             else:
@@ -46,7 +53,7 @@ def load_and_augment_data():
                 if np.random.rand() > keep_probs[j]:
                     remove_list.append(i)
     image_paths = np.delete(image_paths, remove_list, axis=0)
-    angles = np.delete(angles, remove_list)
+    angles = np.delete(angles, remove_list, axis=0)
     res = []
     for x, y in zip(image_paths, angles):
         res.append((x,y))
@@ -91,6 +98,7 @@ def generator(samples, batch_size):
                 images.append(image)
                 angles.append(angle)
 
+                # augment data even more
                 images.append(cv2.flip(image, 1))
                 angles.append(-angle)
 
@@ -98,6 +106,7 @@ def generator(samples, batch_size):
             y_train = np.array(angles)
             yield shuffle(X_train, y_train)
 
+# generate nvidia model
 def make_model():
     from keras.models import Sequential
     from keras.layers import Flatten, Dense, Lambda, Dropout
@@ -121,6 +130,7 @@ def make_model():
     model.compile(loss='mse', optimizer='adam')
     return model
 
+# small model which is simple enough to do experiment on laptop
 def make_small_model():
     from keras.models import Sequential
     from keras.layers import Flatten, Dense, Lambda, Dropout

@@ -71,7 +71,7 @@ For details about how I created the training data, see the next section.
 
 The overall strategy for deriving a model architecture was to use simple model in order to check whole pipeline on laptop and train the model in order to drive first track and then use nvidia model and more data in order to pass second track. 
 
-According to [CS231n Winter 2016: Lecture 11: ConvNets in practice](https://www.youtube.com/watch?v=pA4BsUK3oP4&t=1632s) there is no sense to use big filters, so for the simple model I decided to simplify nvidia model by replacing all 5x5 filters by 3x3 filters and reduce number of layers until it will have reasonable performance on laptop. By doing that, I was able to train small simplified model on data provided by udacity in order to drive first track. It was a good start and good tool for experiments, but such model was not able to drive second track.
+According to [CS231n Winter 2016: Lecture 11: ConvNets in practice](https://www.youtube.com/watch?v=pA4BsUK3oP4) there is no sense to use big filters, so for the simple model I decided to simplify nvidia model by replacing all 5x5 filters by 3x3 filters and reduce number of layers until it will have reasonable performance on laptop. By doing that, I was able to train small simplified model on data provided by udacity in order to drive first track. It was a good start and good tool for experiments, but such model was not able to drive second track.
 
 After that I collected more training data and trained nvidia model in AWS. In order to avoid overfitting, I checked  MSE on the training data and validation data and set appropriate number of epochs to prevent overfitting.
 

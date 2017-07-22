@@ -61,7 +61,7 @@ The model used an adam optimizer, so the learning rate was not tuned manually.
 
 ####4. Appropriate training data
 
-Training data was chosen to keep the vehicle driving on the road. I used a combination of center lane driving, recovering from the left and right sides of the road, driving 
+Training data was chosen to keep the vehicle driving on the road. I used a combination of center lane driving, recovering from the left and right sides of the road, driving counter-clockwise, flipping the images, data from the second track, data from multiple cameras.
 
 For details about how I created the training data, see the next section. 
 
@@ -69,19 +69,23 @@ For details about how I created the training data, see the next section.
 
 ####1. Solution Design Approach
 
-The overall strategy for deriving a model architecture was to ...
+The overall strategy for deriving a model architecture was to use simple model in order to check whole pipeline on laptop and train the model in order to drive first track and then use nvidia model and more data in order to pass second track. 
 
-My first step was to use a convolution neural network model similar to the ... I thought this model might be appropriate because ...
+According to "CS231n Winter 2016: Lecture 11: ConvNets in practice" there is no sense to use big filters, so for the simple model I decided to simplify nvidia model by replacing all 5x5 filters by 3x3 filters and reduce number of layers until it will have reasonable performance on laptop. By doing that, I was able to train small simplified model on data provided by udacity in order to drive first track. It was a good start and good tool for experiments, but such model was not able to drive second track.
 
-In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I found that my first model had a low mean squared error on the training set but a high mean squared error on the validation set. This implied that the model was overfitting. 
+After that I collected more training data and trained nvidia model in AWS. In order to avoid overfitting, I checked  MSE on the training data and validation data and set appropriate number of epochs to prevent overfitting.
 
-To combat the overfitting, I modified the model so that ...
+Using nvidia model, I noticed that car can drive first track easily, even trained only on provided by Udacity training data, however, still can not pass second track. I spent long hours training nvidia model in AWS trying to use different offsets for images from left and right cameras, don't using images from left and right cameras at all and so on. But still without any big progress.
 
-Then I ... 
+After that I noticed that car tend to drive in forward direction. I checked steering angles distribution and it turned out that I had a lot of training samples with steering angle close to zero. After that I decided to filter out some of them and make distribution of steering angles close to uniform destribution.
 
-The final step was to run the simulator to see how well the car was driving around track one. There were a few spots where the vehicle fell off the track... to improve the driving behavior in these cases, I ....
+I did so, but now car was able to drive second track and had a problem with first track that it started to wag on road. Even though, the car still stayed on the road but I was not satisfied with such behavior.
 
-At the end of the process, the vehicle is able to drive autonomously around the track without leaving the road.
+I investigated different techniques which can be used in order to force the car to converge in forward direction in such cases, but decided to take simpler approach and just take a little bit more training data which have steering angle close to zero, hoping that model will learn to prefer forward direction, but not too much forward direction. And eventually, it helped.
+
+Apart from that, I noticed that it seems that performance of autonomous mode depends on quality of display mode, it seems in certain cases if quality is too high drive.py can not catch up, and behavior is not good.
+
+At the end of the process, the vehicle is able to drive autonomously around both tracks without leaving the road.
 
 ####2. Final Model Architecture
 

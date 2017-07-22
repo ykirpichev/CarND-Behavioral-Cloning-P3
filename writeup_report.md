@@ -12,11 +12,12 @@ The goals / steps of this project are the following:
 
 [image1]: ./examples/model.png "Model Architecture"
 [image2]: ./examples/nvidia_cnn.png "Model Visualization"
-[image3]: ./examples/placeholder_small.png "Recovery Image"
-[image4]: ./examples/placeholder_small.png "Recovery Image"
-[image5]: ./examples/placeholder_small.png "Recovery Image"
-[image6]: ./examples/placeholder_small.png "Normal Image"
+[image3]: ./examples/recovery_1.png "Recovery Image"
+[image4]: ./examples/recovery_2.png "Recovery Image"
+[image5]: ./examples/recovery_3.png "Recovery Image"
+[image6]: ./examples/center.png "Normal Image"
 [image7]: ./examples/placeholder_small.png "Flipped Image"
+[image8]: ./examples/center_1.png "Normal Image"
 
 ## Rubric Points
 ###Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
@@ -101,10 +102,10 @@ Here is a visualization of the architecture.
 
 To capture good driving behavior, I first recorded two laps on track one using center lane driving. Here is an example image of center lane driving:
 
-![alt text][image2]
+![alt text][image6] ![alt text][image8]
 
 I then recorded the vehicle recovering from the left side and right sides of the road back to center so that the vehicle would learn to recover back to center.
-These images show what a recovery looks like starting from right side :
+These images show what a recovery looks like starting from left side :
 
 ![alt text][image3]
 ![alt text][image4]

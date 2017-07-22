@@ -89,9 +89,9 @@ At the end of the process, the vehicle is able to drive autonomously around both
 
 ####2. Final Model Architecture
 
-The final model architecture (model.py lines 18-24) consisted of a convolution neural network with the following layers and layer sizes ...
+I used the model described by [nVidia paper](http://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf)
 
-Here is a visualization of the architecture (note: visualizing the architecture is optional according to the project rubric)
+Here is a visualization of the architecture.
 
 ![alt text][image1]
 

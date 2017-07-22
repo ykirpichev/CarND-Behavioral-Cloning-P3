@@ -12,12 +12,12 @@ The goals / steps of this project are the following:
 
 [image1]: ./examples/model.png "Model Architecture"
 [image2]: ./examples/nvidia_cnn.png "Model Visualization"
-[image3]: ./examples/recovery_1.png "Recovery Image"
-[image4]: ./examples/recovery_2.png "Recovery Image"
-[image5]: ./examples/recovery_3.png "Recovery Image"
-[image6]: ./examples/center.png "Normal Image"
+[image3]: ./examples/recovery_1.jpg "Recovery Image"
+[image4]: ./examples/recovery_2.jpg "Recovery Image"
+[image5]: ./examples/recovery_3.jpg "Recovery Image"
+[image6]: ./examples/center.jpg "Normal Image"
 [image7]: ./examples/placeholder_small.png "Flipped Image"
-[image8]: ./examples/center_1.png "Normal Image"
+[image8]: ./examples/center_1.jpg "Normal Image"
 
 ## Rubric Points
 ###Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
